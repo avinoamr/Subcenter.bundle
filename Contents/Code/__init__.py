@@ -1,10 +1,11 @@
 # import urllib2
 # from lxml import etree
 # import json
-# class HTTP:
+# class HTML:
 #     @staticmethod
 #     def ElementFromURL( url, *args, **kwargs ):
 #         return etree.HTML( urllib2.urlopen( url ).read() )
+# class HTTP:
 #     @staticmethod
 #     def Request( url, *args, **kwargs ):
 #         class HTTPRequest:
@@ -29,7 +30,7 @@ FORMATS = [ "hdtv", "480p", "720p", "1080p" ]
 def search( name, fname, fmt, season = None, episode = None ):
     Log( "Search for: " + name )
     url = URL_SEARCH + "?q=" + name.lower().replace( " ", "+" )
-    html = HTTP.ElementFromURL( url, headers = { "User-Agent": HTTP_USER_AGENT } ) 
+    html = HTML.ElementFromURL( url, headers = { "User-Agent": HTTP_USER_AGENT } ) 
 
     titles = []
     for r in html.xpath( "//div[@id='processes']//a" ):
@@ -55,7 +56,12 @@ def get( name, fmt, season = None, episode = None ):
         url += str( season ) + "/" + str( episode ) + "/"
     url = URL_SUBS + category + "/sb/" + url + "?_=1398212416"
     Log( "Getting " + name + ": " + url )
-    results = JSON.ObjectFromURL( url, headers = { "User-Agent": HTTP_USER_AGENT } )
+    try:
+        results = JSON.ObjectFromURL( url, headers = { "User-Agent": HTTP_USER_AGENT } )
+    except Exception as e:
+        Log( "ERROR getting: " + url )
+        Log( e )
+        results = {}
     results = results.get( "he", {} )
 
     subs = []
@@ -72,34 +78,37 @@ def download( sub ):
     k = sub[ "key" ]
     url = URL_DOWNLOAD + "%s/?v=%s&key=%s" % ( sub[ "id" ], v, k )
     Log( "Downloading subtitle: " + url )
-    return HTTP.Request( url, headers = { "User-Agent": HTTP_USER_AGENT } ).content
+    try:
+        return HTTP.Request( url, headers = { "User-Agent": HTTP_USER_AGENT } ).content
+    except Exception as e:
+        Log( "ERROR downloading: " + url )
+        Log( e )
 
 def compact( s ):
     return s.lower().strip().replace( ".", "" ).replace( "-", "" ).replace( "_", "" )
 
 def cmpstr( name ):
     name = compact( name )
-    def _cmp( s, t ):
+    def compare( s, t ):
         if compact( s[ "subtitle_version" ] ) == name: return -1
         elif compact( t[ "subtitle_version" ] ) == name: return 1
         else: return cmp( s[ "downloaded" ], t[ "downloaded" ] )
-    return _cmp
+    return compare
 
 
 def update( part, name, season = None, episode = None ):
-    name = name.lower()
-    fname = part.file
-    formats = filter( lambda f: f in fname, formats )
+    fname = part.file.lower()
+    formats = filter( lambda f: f in fname, FORMATS )
     if not formats: 
-        Log( "Failed to find format for: " + fname )
-        return
+        return Log( "Failed to find format for: " + fname )
 
-    locale = Locale.Language.Hebrew
+    locale = Locale.Language.Unknown
     subs = search( name, fname, formats[ 0 ], season, episode )
     for sub in subs:
         v = sub[ "subtitle_version" ]
         sub = download( sub )
-        part.subtitles[ locale ][ v ] = Proxy.Media( sub, ext = "srt" )
+        if sub:
+            part.subtitles[ locale ][ v ] = Proxy.Media( sub, ext = "srt" )
 
 
 class SubcenterTV( Agent.TV_Shows ):
