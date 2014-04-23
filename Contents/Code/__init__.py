@@ -1,38 +1,38 @@
-import urllib2
-from lxml import etree
-import json
-class HTML:
-    @staticmethod
-    def ElementFromURL( url, *args, **kwargs ):
-        return etree.HTML( urllib2.urlopen( url ).read() )
-class HTTP:
-    @staticmethod
-    def Request( url, *args, **kwargs ):
-        class HTTPRequest:
-            content = urllib2.urlopen( url ).read()
-        return HTTPRequest()
-class JSON:
-    @staticmethod
-    def ObjectFromURL( url, *args, **kwargs ):
-        return json.loads( urllib2.urlopen( url ).read() )
-class Part:
-    subtitles = { "he": {} }
-    def __init__( self, f ): self.file = f
-class Language:
-    Hebrew = "he"
-    NoLanguage = ""
-class Locale:
-    Language = Language
-class Media:
-    def __init__( self, *args, **kwargs ): pass
-class Proxy:
-    Media = Media
-class TV_Shows: pass
-class Movies: pass
-class Agent:
-    TV_Shows = TV_Shows
-    Movies = Movies
-def Log( s ): print s
+# import urllib2
+# from lxml import etree
+# import json
+# class HTML:
+#     @staticmethod
+#     def ElementFromURL( url, *args, **kwargs ):
+#         return etree.HTML( urllib2.urlopen( url ).read() )
+# class HTTP:
+#     @staticmethod
+#     def Request( url, *args, **kwargs ):
+#         class HTTPRequest:
+#             content = urllib2.urlopen( url ).read()
+#         return HTTPRequest()
+# class JSON:
+#     @staticmethod
+#     def ObjectFromURL( url, *args, **kwargs ):
+#         return json.loads( urllib2.urlopen( url ).read() )
+# class Part:
+#     subtitles = { "he": {} }
+#     def __init__( self, f ): self.file = f
+# class Language:
+#     Hebrew = "he"
+#     NoLanguage = ""
+# class Locale:
+#     Language = Language
+# class Media:
+#     def __init__( self, *args, **kwargs ): pass
+# class Proxy:
+#     Media = Media
+# class TV_Shows: pass
+# class Movies: pass
+# class Agent:
+#     TV_Shows = TV_Shows
+#     Movies = Movies
+# def Log( s ): print s
 
 
 ##
