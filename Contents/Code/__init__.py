@@ -1,20 +1,20 @@
-import urllib2
-from lxml import etree
-import json
-class HTTP:
-    @staticmethod
-    def ElementFromURL( url, *args, **kwargs ):
-        return etree.HTML( urllib2.urlopen( url ).read() )
-    @staticmethod
-    def Request( url, *args, **kwargs ):
-        class HTTPRequest:
-            content = urllib2.urlopen( url ).read()
-        return HTTPRequest()
-class JSON:
-    @staticmethod
-    def ObjectFromURL( url, *args, **kwargs ):
-        return json.loads( urllib2.urlopen( url ).read() )
-def Log( s ): print s
+# import urllib2
+# from lxml import etree
+# import json
+# class HTTP:
+#     @staticmethod
+#     def ElementFromURL( url, *args, **kwargs ):
+#         return etree.HTML( urllib2.urlopen( url ).read() )
+#     @staticmethod
+#     def Request( url, *args, **kwargs ):
+#         class HTTPRequest:
+#             content = urllib2.urlopen( url ).read()
+#         return HTTPRequest()
+# class JSON:
+#     @staticmethod
+#     def ObjectFromURL( url, *args, **kwargs ):
+#         return json.loads( urllib2.urlopen( url ).read() )
+# def Log( s ): print s
 
 
 ##
