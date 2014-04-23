@@ -36,6 +36,7 @@
 
 
 ##
+import os
 HTTP_USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/34.0.1847.116 Safari/537.36"
 URL_SEARCH = "http://subscenter.cinemast.com/he/subtitle/search/"
 URL_SUBS = "http://subscenter.cinemast.com/he/cinemast/data/"
@@ -43,25 +44,28 @@ URL_DOWNLOAD = "http://subscenter.cinemast.com/subtitle/download/he/"
 MAX_TITLES = 4 # maximum top search result titles to review
 MAX_RESULTS = 4 # maximum subtitles to download
 LEVENSHTEIN_MAX = 0.5 
-FORMATS = [ "hdtv", "480p", "720p", "1080p" ]
+FORMATS = [ "hdtv", "1080p", "720p", "480p" ]
 
 def search( name, fname, season = None, episode = None ):
     Log( "Search for: " + name )
 
     fname = fname.lower()
     formats = filter( lambda f: f in fname, FORMATS )
-    if not formats: return Log( "Failed to find format for: " + fname )
-    fmt = formats[ 0 ]
+    fmt = formats[ 0 ] if formats else None
+    Log( "Using format %s for %s" % ( fmt, name ) )
 
     url = URL_SEARCH + "?q=" + name.lower().replace( " ", "+" )
     html = HTML.ElementFromURL( url, headers = { "User-Agent": HTTP_USER_AGENT } ) 
 
+    cname = compact( name )
     titles = []
     for r in html.xpath( "//div[@id='processes']//a" ):
         if not r.text.strip(): continue
         title = r.attrib[ "href" ].split( "/" )[ -2 ]
         Log( "Search found: " + title )
-        titles.append( title )
+        if levenshtein( cname, compact( title ) ) < LEVENSHTEIN_MAX:
+            titles.append( title )
+        else: Log( "Levenshtein Failed for title: %s" % title )
         if len( titles ) > MAX_TITLES: break # 
 
     subs = []
@@ -79,6 +83,8 @@ def search( name, fname, season = None, episode = None ):
     # filter out results that are too far away from the search string
     l = lambda s: levenshtein( cfname, compact( s[ "subtitle_version" ] ) )
     subs = filter( lambda s: l( s ) < LEVENSHTEIN_MAX, subs )
+
+    Log( "Received %s (Filtered) subs for %s" % ( len( subs ), name ) )
 
     # sort by download count
     subs = sorted( subs, None, lambda s: s[ "downloaded" ], True )
@@ -105,9 +111,11 @@ def get( name, fmt, season = None, episode = None ):
 
     subs = []
     for p in results:
-        result = results[ p ].get( fmt, {} )
-        for sub in result:
-            subs.append( result[ sub ] )
+        for f in results[ p ]:
+            if fmt in [ None, f ]:
+                result = results[ p ][ f ]
+                for sub in result:
+                    subs.append( result[ sub ] )
     Log( "Get found %s subtitles for %s" % ( len( subs ), name ) )
     return subs
 
@@ -126,7 +134,7 @@ def download( sub ):
 
 
 def compact( s ):
-    return s.lower().strip().replace( ".", "" ).replace( "-", "" ).replace( "_", "" )
+    return s.lower().strip().replace( ".", "" ).replace( "-", "" ).replace( "_", "" ).replace( " ", "" ).replace( ":", "" )
 
 # compute the levenshtein distance between the two strings
 # recursive implementation with memoization for efficiency
@@ -145,12 +153,15 @@ def levenshtein( s, t ):
             do( si - 1, ti - 1 ) + cost # substitution
         )
         return m[ si, ti ]
-    return do( len( s ), len( t ) ) / float( len( s ) ) # can't be zero division
-
+    result = do( len( s ), len( t ) ) / float( len( s ) ) # can't be zero division
+    Log( "Levenshtein %s ( %s, %s )" % ( result, s, t ) )
+    return result
 
 def update( part, name, season = None, episode = None ):
     locale = Locale.Language.Hebrew
-    subs = search( name, part.file, season, episode )
+    fname = os.path.split( part.file )[ -1 ]
+    fname = ".".join( fname.split( "." )[ :-1 ] )
+    subs = search( name, fname, season, episode )
     for sub in subs:
         v = sub[ "subtitle_version" ]
         sub = download( sub )
