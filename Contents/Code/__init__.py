@@ -110,8 +110,8 @@ class SubcenterTV( Agent.TV_Shows ):
 
     def search( self, results, media, lang ):
         results.Append( MetadataSearchResult(
-          id    = "null",
-          score = 100
+            id    = "null",
+            score = 100
         ))
 
     def update( self, metadata, media, lang ):
@@ -121,3 +121,21 @@ class SubcenterTV( Agent.TV_Shows ):
                 for i in media.seasons[ s ].episodes[ e ].items:
                     for part in i.parts:
                         update( part, media.title, s, e )
+
+
+class SubcenterMovies( Agent.Movies ):
+    name = "Subcenter.org"
+    languages = [ Locale.Language.NoLanguage ]
+    primary_provider = False
+    contributes_to = [ "com.plexapp.agents.imdb" ]
+  
+    def search(self, results, media, lang):
+        results.Append( MetadataSearchResult(
+            id    = "null",
+            score = 100
+        ))
+    
+    def update( self, metadata, media, lang ):
+        for i in media.items:
+            for part in i.parts:
+                update( part, media.title )
