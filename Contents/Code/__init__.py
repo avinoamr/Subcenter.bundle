@@ -135,7 +135,7 @@ def download( sub ):
     fnames = zsub.namelist()
     if not fnames: return None
 
-    sub = zsub.read( fname[ 0 ] )
+    sub = zsub.read( fnames[ 0 ] )
     Log( "Downloaded and unzipped: %s" % url )
     return sub
 
@@ -214,3 +214,8 @@ class SubcenterMovies( Agent.Movies ):
         for i in media.items:
             for part in i.parts:
                 update( part, media.title )
+
+
+
+# test
+# update( Part( "AboutTime.2013.720p.BrRip.x264.YIFY" ), "About Time" )
