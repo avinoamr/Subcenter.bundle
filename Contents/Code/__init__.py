@@ -126,7 +126,7 @@ def download( sub ):
     v = sub[ "subtitle_version" ]
     k = sub[ "key" ]
     url = URL_DOWNLOAD + "%s/?v=%s&key=%s" % ( sub[ "id" ], v, k )
-    Log( "Downloading subtitle: %s" url )
+    Log( "Downloading subtitle: %s" % url )
 
     sub = HTTP.Request( url, headers = { "User-Agent": HTTP_USER_AGENT } )
     sub = StringIO.StringIO( sub.content )
