@@ -37,12 +37,14 @@
 
 ##
 import os
+import zipfile
+import StringIO
 HTTP_USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/34.0.1847.116 Safari/537.36"
 URL_SEARCH = "http://subscenter.cinemast.com/he/subtitle/search/"
 URL_SUBS = "http://subscenter.cinemast.com/he/cinemast/data/"
 URL_DOWNLOAD = "http://subscenter.cinemast.com/subtitle/download/he/"
 MAX_TITLES = 4 # maximum top search result titles to review
-MAX_RESULTS = 4 # maximum subtitles to download
+MAX_RESULTS = 2 # maximum subtitles to download
 LEVENSHTEIN_MAX = 0.5 
 FORMATS = [ "hdtv", "1080p", "720p", "480p" ]
 
@@ -124,12 +126,17 @@ def download( sub ):
     v = sub[ "subtitle_version" ]
     k = sub[ "key" ]
     url = URL_DOWNLOAD + "%s/?v=%s&key=%s" % ( sub[ "id" ], v, k )
-    Log( "Downloading subtitle: " + url )
-    try:
-        sub = HTTP.Request( url, headers = { "User-Agent": HTTP_USER_AGENT } ).content
-    except Exception as e:
-        Log( "ERROR downloading: " + url )
-        Log( e )
+    Log( "Downloading subtitle: %s" url )
+
+    sub = HTTP.Request( url, headers = { "User-Agent": HTTP_USER_AGENT } )
+    sub = StringIO.StringIO( sub.content )
+    zsub = zipfile.ZipFile( sub )
+
+    fnames = zsub.namelist()
+    if not fnames: return None
+
+    sub = zsub.read( fname[ 0 ] )
+    Log( "Downloaded and unzipped: %s" % url )
     return sub
 
 
@@ -169,6 +176,7 @@ def update( part, name, season = None, episode = None ):
             part.subtitles[ locale ][ v ] = Proxy.Media( sub, ext = "srt" )
             Log( "Subtitle saved for: " + v )
 
+
 class SubcenterTV( Agent.TV_Shows ):
     name = "Subcenter.org"
     languages = [ Locale.Language.NoLanguage ]
@@ -206,6 +214,3 @@ class SubcenterMovies( Agent.Movies ):
         for i in media.items:
             for part in i.parts:
                 update( part, media.title )
-
-
-# update( Part( "AboutTime.2013.720p.BrRip.x264.YIFY" ), "About Time" ) # test
